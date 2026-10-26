@@ -18,12 +18,13 @@ Then open http://127.0.0.1:8080. No Node.js, npm, build step, application backen
 
 ## GitHub Pages
 
-1. Copy the contents of this folder to the root of a dedicated GitHub repository, or to `docs/` in an existing repository.
-2. Under **Settings → Pages → Build and deployment**, select **Deploy from a branch**.
-3. Select the `main` branch and `/ (root)` (or `/docs`), then click **Save**.
-4. Open the URL provided by GitHub Pages.
+Live site: https://yupic.github.io/froggy-launcher/
 
-All local asset paths are relative, so the app also works at `https://USER.github.io/REPOSITORY/`. You do not need to publish any other research files from the parent project. `serve.py` and `start-local.cmd` are not needed for hosting.
+The `.github/workflows/pages.yml` workflow deploys the site using GitHub Actions. Changes to `index.html`, `app.js`, `styles.css`, or the workflow on `main` trigger deployment. You can also run it manually from the Actions tab.
+
+Only `index.html`, `app.js`, and `styles.css` are copied into the deployment artifact. Local helpers (`serve.py`, `start-local.cmd`), this README, and repository metadata are excluded from the published website. Files committed to this public repository remain publicly accessible on GitHub.
+
+For a fork, enable Pages under **Settings → Pages → Build and deployment → Source → GitHub Actions**, then run the workflow. All local asset paths are relative, so the app works in a repository subdirectory.
 
 ## Game launch URL
 
