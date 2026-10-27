@@ -5,17 +5,65 @@
   document.getElementById("local-warning").hidden = location.protocol !== "file:";
 
   const status = document.getElementById("status");
-  if (!window.L) {
+  if (!window.maplibregl) {
     status.textContent = "Could not load the map. Check your internet connection and reload the page.";
     return;
   }
 
-  const map = L.map("map", { worldCopyJump: true }).setView([25, 15], 3);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  }).addTo(map);
-  map.zoomControl.setPosition("bottomright");
+  let map;
+  try {
+    map = new maplibregl.Map({
+      container: "map",
+      style: "https://tiles.openfreemap.org/styles/liberty",
+      center: [15, 25],
+      zoom: 2,
+      maxZoom: 19,
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchPitch: false,
+      attributionControl: false,
+    });
+  } catch {
+    status.textContent = "Could not start the map. Enable WebGL in your browser and reload the page.";
+    return;
+  }
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+  map.addControl(new maplibregl.AttributionControl({ compact: false }), "bottom-left");
+
+  // Ignore empty translations and fall back to a Latin name, then the local name.
+  function nonEmptyName(field) {
+    return ["case", ["all", ["has", field], ["!=", ["get", field], ""]], ["get", field], null];
+  }
+
+  function labelExpression() {
+    const english = ["to-string", ["coalesce", nonEmptyName("name:en"), nonEmptyName("name_en"),
+      nonEmptyName("name:latin"), nonEmptyName("name"), ""]];
+    return ["let", "english", english, "local", ["to-string", ["coalesce", nonEmptyName("name"), english]],
+      ["case", ["!=", ["var", "english"], ["var", "local"]],
+        ["concat", ["var", "english"], "\n", ["var", "local"]], ["var", "english"]]];
+  }
+
+  // Keep route numbers and other non-name labels unchanged.
+  function usesName(expression) {
+    return Array.isArray(expression) && (
+      (expression[0] === "get" && /^name(?::|_|$)/.test(expression[1])) || expression.some(usesName)
+    );
+  }
+
+  function applyLanguage() {
+    for (const layer of map.getStyle().layers) {
+      if (layer.type === "symbol" && usesName(layer.layout?.["text-field"])) {
+        map.setLayoutProperty(layer.id, "text-field", labelExpression());
+      }
+    }
+  }
+
+  map.on("style.load", applyLanguage);
+  map.on("error", (event) => {
+    console.warn("Map error:", event.error);
+    status.textContent = "Some map data could not be loaded. Check your connection or reload the page.";
+  });
 
   const latitude = document.getElementById("latitude");
   const longitude = document.getElementById("longitude");
@@ -50,17 +98,19 @@
     note.textContent = "Opens in a new tab";
     content.append(title, coordinates, link, note);
 
-    if (marker) map.removeLayer(marker);
-    marker = L.marker([lat, lng], { title: "Selected spot", alt: "Selected location for Froggy" }).addTo(map);
-    if (zoomToPoint) map.setView([lat, lng], Math.max(map.getZoom(), 6));
-    marker.bindPopup(content, { maxWidth: 260 }).openPopup();
+    if (marker) marker.remove();
+    marker = new maplibregl.Marker({ color: "#245c44" }).setLngLat([lng, lat]).addTo(map);
+    marker.getElement().setAttribute("aria-label", "Selected location for Froggy");
+    marker.getElement().title = "Selected spot";
+    if (zoomToPoint) map.jumpTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 5) });
+    marker.setPopup(new maplibregl.Popup({ offset: 30, maxWidth: "260px" }).setDOMContent(content)).togglePopup();
     status.textContent = "Spot selected. Bookmark or share this page to return to it.";
     // Hash also works when the page is hosted in a GitHub Pages subdirectory.
     try { history.replaceState(null, "", `#${new URLSearchParams({ lat: String(lat), lng: String(lng) })}`); }
     catch { /* file:// and privacy settings may restrict history access. */ }
   }
 
-  map.on("click", ({ latlng }) => selectPoint(Math.max(-90, Math.min(90, latlng.lat)), latlng.lng));
+  map.on("click", ({ lngLat }) => selectPoint(Math.max(-90, Math.min(90, lngLat.lat)), lngLat.lng));
 
   function parseCoordinate(value) {
     return value.trim() === "" ? NaN : Number(value.trim().replace(",", "."));
@@ -88,5 +138,5 @@
   restorePoint();
   window.addEventListener("hashchange", restorePoint);
   // Header changes height when the coordinate form opens or the phone rotates.
-  if (window.ResizeObserver) new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById("map"));
+  if (window.ResizeObserver) new ResizeObserver(() => map.resize()).observe(document.getElementById("map"));
 })();

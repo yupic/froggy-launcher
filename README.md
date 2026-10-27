@@ -6,9 +6,9 @@ A static app that displays an OpenStreetMap map and launches Froggy's World in a
 
 On Windows, double-click `start-local.cmd`. Python 3 must be installed and available as `python`. The script starts an HTTP server accessible only from your computer and opens the app in your default browser. Keep the server window open while using the app. Press Ctrl+C or close the window to stop it.
 
-Do not open `index.html` directly using `file://`: OSM requires an HTTP Referer header, which local files do not provide. Map tiles may show Access blocked / 403 instead. The helper scripts are only for local use; GitHub Pages serves the static app without them.
+Use the local HTTP server instead of opening `index.html` directly using `file://`, so map resources load reliably. The helper scripts are only for local use; GitHub Pages serves the static app without them.
 
-An internet connection is required: Leaflet 1.9.4 loads from unpkg and map tiles load from OSM. Alternatively, run this command from the app folder:
+An internet connection is required: MapLibre GL JS 5.24.0 loads from unpkg and map resources load from OpenFreeMap. Alternatively, run this command from the app folder:
 
 ```sh
 python -m http.server 8080 --bind 127.0.0.1
@@ -26,6 +26,12 @@ Only `index.html`, `app.js`, and `styles.css` are copied into the deployment art
 
 For a fork, enable Pages under **Settings → Pages → Build and deployment → Source → GitHub Actions**, then run the workflow. All local asset paths are relative, so the app works in a repository subdirectory.
 
+## Map label language
+
+Map labels always show English and the local name. The local name appears on a second line only when it differs from the English name. There is no language selector or saved language preference.
+
+Labels prefer the English translation in OSM, then a Latin-script name or transliteration, then the local name. Not every feature has an English translation. Bilingual labels apply to names of places, roads, water features, and points of interest; route numbers are preserved. The map uses OpenFreeMap's Liberty vector style and requires browser WebGL support.
+
 ## Game launch URL
 
 ```text
@@ -38,8 +44,8 @@ The map uses Web Mercator and displays latitudes up to approximately ±85°. You
 
 ## Dependencies and data
 
-- [Leaflet 1.9.4](https://leafletjs.com/examples/quick-start/) provides the map, markers, and popups. The version is pinned and its CSS/JS files use SRI integrity hashes.
+- [MapLibre GL JS 5.24.0](https://maplibre.org/maplibre-gl-js/docs/) provides the map, markers, and popups. The version is pinned and its CSS/JS files use SRI integrity hashes.
 - [OpenStreetMap](https://www.openstreetmap.org/copyright) provides map data. Attribution remains visible on the map.
-- [OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/) applies. The app uses standard browser caching, without bulk prefetching or offline downloads. For heavy traffic, choose an appropriate tile provider; the tile URL is configured in `app.js`.
+- [OpenFreeMap](https://openfreemap.org/) provides vector tiles, fonts, sprites, and the Liberty style, using the OpenMapTiles schema. Attribution is displayed on the map. The style URL is configured in `app.js`.
 
-The app does not request device geolocation or store data on an application server. The selected coordinates are included in the page URL. The browser requests visible map tiles from OSM and the map library from unpkg. Launching the game sends the selected coordinates to Google. Map labels are supplied by OSM tiles and may use local languages. This is an independent tool, not an official Google or OSM product.
+The app does not request device geolocation or store data on an application server. The selected coordinates are included in the page URL. The browser requests map resources from OpenFreeMap and the map library from unpkg. Launching the game sends the selected coordinates to Google. This is an independent tool, not an official Google, OpenFreeMap, or OSM product.

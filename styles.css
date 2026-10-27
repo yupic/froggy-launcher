@@ -17,12 +17,13 @@ button:hover, .launch:hover { background: #164331; }
 :focus-visible { outline: 3px solid #d58b24; outline-offset: 3px; }
 #map { flex: 1; min-height: 160px; background: #c9e1e7; }
 #status { flex: none; padding: 9px 16px max(9px, env(safe-area-inset-bottom)); font-size: 12px; text-align: center; color: #52695b; }
-.leaflet-container { font-family: inherit; }
-.leaflet-popup-content-wrapper { border-radius: 14px; }
-.leaflet-popup-content { margin: 18px; width: 224px !important; }
+.maplibregl-map { font-family: inherit; }
+.maplibregl-popup-content { border-radius: 14px; padding: 18px; width: 260px; }
+.maplibregl-popup-close-button { padding: 3px 8px; color: #52695b; background: transparent; font-size: 20px; }
+.maplibregl-popup-close-button:hover { background: #e9eee5; }
 .point-title { margin: 0 16px 9px 0; font-size: 16px; }
 .point-coordinates { font-variant-numeric: tabular-nums; font-size: 14px; color: #52695b; margin: 0 0 15px; }
-.leaflet-popup-content a.launch { display: block; color: white; text-decoration: none; }
+.maplibregl-popup-content a.launch { display: block; color: white; text-decoration: none; }
 .new-tab { display: block; text-align: center; color: #63756a; font-size: 11px; margin-top: 8px; }
 .no-script { position: fixed; inset: 45% 10% auto; background: white; padding: 24px; z-index: 2000; }
 @media (max-width: 480px) {
